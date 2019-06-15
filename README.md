@@ -1,2 +1,2 @@
 # RaukR_twitter
-A study of bioinformatics and biocondutor tweets 2008 - 2019.
+Twitter: a study of bioinformatics and biocondutor tweets dating from 2008 - 2019.
