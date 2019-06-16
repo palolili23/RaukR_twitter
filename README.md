@@ -1,2 +1,2 @@
 # RaukR_twitter
-A study of bioinformatics retweets 
+Twitter: a study of bioinformatics and biocondutor tweets dating from 2015 - 2019.
