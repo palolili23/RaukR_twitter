@@ -19,5 +19,3 @@ bar_chart <- function(data, var1 = var1){
       guide = guide_legend(reverse = TRUE))
   
 }
-
-bar_chart(timeline, var1 = source)
