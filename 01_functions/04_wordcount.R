@@ -9,11 +9,12 @@ text <- timeline %>%
 
 words <- get_tokens(text, pattern = "\\W")
 stopwords <- rcorpora::corpora("words/stopwords/en")$stopWords
-
+numbers <- c(1:2019)
 words <- as_tibble(words)
 
 words_count <- words %>% 
   filter(!value %in% stopwords) %>% 
+  filter(!value %in% numbers) %>% 
   count(value, sort = TRUE) %>% 
   slice(1:rank)
 

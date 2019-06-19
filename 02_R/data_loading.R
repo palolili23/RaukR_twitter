@@ -1,6 +1,7 @@
 source("01_functions/00_load_libraries.R")
 source("01_functions/01_twitter_token.R")
 source("01_functions/02_cleaning_fx.R")
+source("01_functions/04_wordcount.R")
 data_week_bioinf <- import(here("03_rawdata", "data_week_bioinf.RData"))
 timeline <- import(here("03_rawdata", "timeline_top20_bioinf.RData"))
 
@@ -36,37 +37,50 @@ bar_chart(timeline, var1 = screen_name)
 
 ts_plot(data_week_bioinf, "days")
 
-ts_plot(timeline, "days")
+ts_plot(timeline, "days", group = "is_retweet")
 
 
 
 # Some text analysis --------------------------------------------------------
-text_2 <- get_tokens(text, pattern = "\\W")
+# Cleans data
+timeline_top100 <- twitter_words(timeline, rank = 100)
+week_top100 <- twitter_words(data_week_bioinf, rank = 100)
+# Plots data
+colorlist <- wes_palette("Cavalcanti1", 80, type = "continuous")
 
-View(text_2)
+wordcloud2(data = timeline_top100, size = 1,
+           color = colorlist)
 
-text_2 %>% count()
-count(text_2)
+wordcloud2(data = week_top100, size = 1,
+           color = colorlist)
 
-install.packages("rcorpora")
-stopwords <- rcorpora::corpora("words/stopwords/en")$stopWords
+export(timeline_top100, here("03_rawdata", "week_count_top.RData"))
 
-tokens <- data_week_bioinf %>%
-  dplyr::select(text) %>%
-  tidytext::unnest_tokens(token, text,
-                          token = "token",
-                          drop = FALSE) %>%
-  dplyr::filter(!token %in% stopwords) 
 
-# text 1 ------------------------------------------------------------------
 
-text_2
-text_2 <- as_tibble(text_2)
-class(text_2)
-str(text_2)
-colnames(text_2)
-count <- text_2 %>% count(value, sort = TRUE)
 
-text_2 %>% 
-  filter(!value %in% stopwords) %>% 
-  count(value, sort = TRUE)
+# Barcharts ---------------------------------------------------------------
+source <- timeline %>% 
+  select(source) %>% 
+  count(source, sort = TRUE) %>% 
+  slice(1:20) %>% 
+  rename(variable = source)
+
+export(location, here("03_rawdata", "location.RData"))
+export(screen_name, here("03_rawdata", "screen_name.RData"))
+export(source, here("03_rawdata", "source.RData"))
+
+View(location)
+
+source %>% 
+  ggplot(aes(x = reorder(variable, -n), y = n, fill = variable)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.title.y = element_blank()) +
+  scale_fill_manual(
+    values = colorRampPalette(
+      RColorBrewer::brewer.pal(n = 25, name = "Spectral"))(25),
+    guide = guide_legend(reverse = TRUE))
+
