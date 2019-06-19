@@ -1,20 +1,24 @@
 ---
 title: "RaukR_twitter"
-author: "Paloma"
+author: "Jonelly, Paloma, Ying"
 date: "19/6/2019"
 output: 
   html_document:
     toc: true
     toc_float: true
     toc_depth: 3
-    number_sections: true
+    number_sections: false
+    code_folding: hide
     css: ["./raukr.css"]
 ---
 ```{r, echo = FALSE, message=FALSE}
 source("../01_functions/00_load_libraries.R")
 source("../01_functions/03_barplots.R")
+source("../01_functions/04_wordcount.R")
 data_week_bioinf <- import(here("03_rawdata", "data_week_bioinf.RData"))
 timeline <- import(here("03_rawdata", "timeline_top20_bioinf.RData"))
+colorlist <- wes_palette("Cavalcanti1", 80, type = "continuous")
+
 ```
 
 For this project we did the following steps:
@@ -83,7 +87,7 @@ timeline %>%
 ```
 
 
-# Graphs
+# Graphs{.tabset}
 
 ## Trends over time of number of tweets
 
@@ -99,6 +103,7 @@ For the top 20 users, through all the years
 ts_plot(timeline)
 ```
 
+## Frequency plots
 
 We wanted a frequency of tweets, by different variables, so we created a function
 
@@ -138,4 +143,120 @@ bar_chart(timeline, var1 = screen_name)
 ```{r, message=FALSE, warning=FALSE}
 bar_chart(timeline, var1 = location)
 ```
+
+## Plot in maps
+
+First it required some data cleaning
+
+```{r}
+## renaming and grouping cities into countries
+loc_count <- timeline %>% count(location)
+
+loc_count <- loc_count %>% 
+  mutate(Country = case_when(
+    location %in% c("Melbourne Victoria ") ~ "Australia",
+    location %in% c("Berlin","Leipzig, Germany") ~ "Germany",
+    location %in% c("Greater Sudbury/Grand Sudbur","Montréal, Québec") ~ "Canada",
+    location %in% c("France") ~ "France",
+    location %in% c("Bergen,Norway") ~ "Norway",
+    location %in% c("Edinburgh","London, England","Norwich, UK","Oxford, England") ~ "United Kingdom",
+    location %in% c("Boston, MA","Seattle, WA","New Orleans, LA, USA", "United States") ~ "United States of America",
+    location %in% c("The Earth") ~ "Earth",
+    TRUE ~ "OTHER",
+    ))
+
+## getting total for plotting
+total_by_country <- loc_count %>% 
+  group_by(Country) %>% 
+  summarize(Total=sum(n))
+
+## making a sf
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+
+#total_by_country_merged
+world_merged <- total_by_country %>% 
+  left_join(world, by = c("Country" = "sovereignt"))
+
+```
+
+
+### America
+
+```{r}
+ggplot(data = world_merged) +
+  geom_sf(aes(fill = Total)) +
+  coord_sf(xlim = c(-180.00,-50.00), ylim = c(20.00,80.00), expand = FALSE)
+```
+
+### Europe
+```{r}
+ggplot(data = world_merged) +
+  geom_sf(aes(fill = Total)) +
+  coord_sf(xlim = c(-10.00,17.00), ylim = c(40.00,60.00), expand = FALSE)
+
+```
+
+## WordClouds
+
+To make this possible we first had to clean the data that belogs to the `text` variable, this represents the content of the tweet.
+
+We created a function that:
+
+- Cleans spaces and symbols
+
+- Creates a vector with words
+
+- Filters words that are not stopwords or numbers
+
+- Sorts the frequency in descendant 
+
+- Brings the rows defined in `rank`
+
+```{r, eval = FALSE, warning= FALSE, message= FALSE}
+twitter_words <- function(data, rank) {
+
+text <- timeline %>% 
+  mutate(text2 = gsub("^RT:?\\s{0,}|#|@\\S+|https?[[:graph:]]+", "", text),
+         text2 = tolower(text2),
+         text2 = gsub("^\\s{1,}|\\s{1,}$", "", text2),
+         text2 = gsub("\\s{2,}", " ", text2)) %>% 
+  pull(text2)
+
+words <- get_tokens(text, pattern = "\\W")
+stopwords <- rcorpora::corpora("words/stopwords/en")$stopWords
+numbers <- c(1:2019)
+words <- as_tibble(words)
+
+words_count <- words %>% 
+  filter(!value %in% stopwords) %>% 
+  filter(!value %in% numbers) %>% 
+  count(value, sort = TRUE) %>% 
+  slice(1:rank)
+
+return(words_count)
+}
+```
+
+### Using weekly data
+
+```{r, warning= FALSE, message= FALSE}
+week_top100 <- twitter_words(data_week_bioinf, rank = 100)
+weekly <- wordcloud2(data = week_top100, size = 1,
+           color = colorlist)
+
+saveWidget(weekly,"1.html",selfcontained = F)
+webshot::webshot("1.html","1.png",vwidth = 700, vheight = 500, delay =10)
+```
+
+### Using timeline data
+
+```{r, warning= FALSE, message= FALSE}
+timeline_top100 <- twitter_words(timeline, rank = 100)
+timeline <- wordcloud2(data = week_top100, size = 1,
+           color = colorlist)
+saveWidget(timeline,"2.html",selfcontained = F)
+webshot::webshot("2.html","2.png",vwidth = 700, vheight = 500, delay =10)
+```
+
 
