@@ -10,12 +10,9 @@ output:
     number_sections: true
     css: ["./raukr.css"]
 ---
-```{r echo = FALSE, message=FALSE}
-library(rtweet)
-library(tidyverse)
-library(here)
-library(glue)
-library(rio)
+```{r, echo = FALSE, message=FALSE}
+source("../01_functions/00_load_libraries.R")
+source("../01_functions/03_barplots.R")
 data_week_bioinf <- import(here("03_rawdata", "data_week_bioinf.RData"))
 timeline <- import(here("03_rawdata", "timeline_top20_bioinf.RData"))
 ```
@@ -86,4 +83,59 @@ timeline %>%
 ```
 
 
+# Graphs
+
+## Trends over time of number of tweets
+
+For all tweeter users, last week:
+
+```{r}
+ts_plot(data_week_bioinf, "days")
+```
+
+For the top 20 users, through all the years
+
+```{r}
+ts_plot(timeline)
+```
+
+
+We wanted a frequency of tweets, by different variables, so we created a function
+
+```{r, eval = FALSE}
+bar_chart <- function(data, var1 = var1){
+  var1 <- enquo(var1)
+  label <- quo_name(var1)
+  
+  data %>% 
+    count(!! var1, sort = TRUE) %>%
+    slice(1:20) %>% 
+    ggplot(aes(x = reorder(!! var1, -n), y = n, fill = !! var1)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    labs(title = glue("Top twitter {label} in #bioinformatics"),
+         x = glue("{label}")) +
+    theme(plot.title = element_text(size = rel(2))) +
+    theme_minimal() +
+    theme(legend.position="none") +
+    scale_fill_manual(
+      values = colorRampPalette(
+        RColorBrewer::brewer.pal(n = 25, name = "Spectral"))(25),
+      guide = guide_legend(reverse = TRUE))
+  
+}
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+bar_chart(timeline, var1 = source)
+```
+
+```{r, message=FALSE, warning=FALSE}
+bar_chart(timeline, var1 = screen_name)
+```
+
+```{r, message=FALSE, warning=FALSE}
+bar_chart(timeline, var1 = location)
+```
 
