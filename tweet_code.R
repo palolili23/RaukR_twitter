@@ -22,16 +22,6 @@ x %>% .$is_retweet
 ## tweets sent via different platforms
 t <-table(x$source)
 
-## vector of all supported language abbreviations
-langs <- c("en", "ar", "bn", "cs", "da", "de", "el", "es", "fa", "fi", "fil", 
-           "fr", "he", "hi", "hu", "id", "it", "ja", "ko", "msa", "nl", "no", "pl", 
-           "pt", "ro", "ru", "sv", "th", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw")
-## add param name (lang) to each
-langs <- paste0("lang:", langs)
-## collapse into single OR search
-langs <- paste(langs, collapse = " OR ")
-
-
 ## retweet counts
 retw_10 <- x %>% select(retweet_count) %>% 
   filter(retweet_count < "10")
