@@ -1,4 +1,3 @@
-
 setwd("/Users/yisun086/Desktop/RaukR/twitter_proj/RaukR_twitter/06_shiny")
 load("twitter_R_Python_data.RData")
 n <-3
@@ -9,68 +8,76 @@ library(shiny)
 
 
 ui <- fluidPage(
-  tags$img(height=100,width=100,
-           src="logo.png"),
-  h1("Twitter data research"),
-
+  fluidRow(
+    column(3,tags$img(height=150,width=150,src="logo.png")),
+    column(5,h1("Twitter: a study of bioinformatics tweets"))  
+  ),
+  
   #titlePanel("Twitter Research"),
   navbarPage("",
              tabPanel("Component 1",
                       sidebarLayout(
                         sidebarPanel(
                           selectInput("data_input",label="Select data",
-                                      choices=c("Rstudio.source","Python.source")),
+                                      choices=c("Rstudio.source","Python.source")
+                                      ),
                           textInput(inputId="title",label="Write your plot title here",
                                     value="Barplot for Top 10 Twitter Source")
                         ),
                         
                         mainPanel(
                           plotOutput("plot_output")
-                        ))),
+                        )
+                        )),
              tabPanel("Component 2",
                       sidebarLayout(
                         sidebarPanel(
                           selectInput("data_input2",label="Select data",
-                                      choices=c("R.name")),
+                                      choices=c("R.name","Python.name")
+                                      ),
                           bootstrapPage(
                             numericInput('size', 'Size of wordcloud', n)
-                            
-                          )
+                                       ),
+                          selectInput("data_input",label="Select data for source search",
+                                      choices=c("Rstudio.source","Python.source")),
+                          textInput(inputId="title",label="Write your plot title here",
+                                    value="Barplot for Top 10 Twitter Source")
                         ),
                         
                         mainPanel(
-                          wordcloud2Output('wordcloud2')
-                        ))
-                      
-                      
-                      #bootstrapPage(
-                      #numericInput('size', 'Size of wordcloud', n),
-                      # wordcloud2Output('wordcloud2')
-                      # )
+                          tabsetPanel(type = "tabs",
+                                      tabPanel("wordcloud", wordcloud2Output('wordcloud')),
+                                      tabPanel("plot",plotOutput("plot") )
+                          )
+                          )
+                        )
              ),
-             #mainPanel(
-             #plotOutput("plot_output")
-             #))),
+
              tabPanel("Component 3")
   )
 )
 server <- function(input,output){
-  # getdata1 <- reactive({ get(input$data_input) })
-  getdata2 <- reactive({ get(input$data_input2) })
-   # output$plot_output <- renderPlot({
-     # ggplot(data=getdata1(),aes(x=source,y=Freq))+
-       # geom_bar(stat="identity",fill="steelblue")+
-       # ggtitle(isolate(input$title))+
-       # theme(
-         # axis.text.x=element_text(angle=90,hjust=1,vjust=0.5,size=15),
-         # plot.title = element_text(color="steelblue", size=17, face="bold.italic")
-       # )
-   # })
   
-  output$wordcloud2 <- renderWordcloud2({
+  getdata2 <- reactive({ get(input$data_input2) })
+  getdata1 <- reactive({ get(input$data_input) })
+  
+  ## worldcloud output
+  output$wordcloud <- renderWordcloud2({
     #wordcloud2(getdata2(), size=input$size)
     letterCloud(getdata2(), size=input$size,word = "R", color='random-light' , backgroundColor="black")
   })
+  ## barplot output
+   output$plot <- renderPlot({
+   ggplot(data=getdata1(),aes(x=source,y=Freq))+
+   geom_bar(stat="identity",fill="steelblue")+
+   ggtitle(isolate(input$title))+
+   theme(
+   axis.text.x=element_text(angle=90,hjust=1,vjust=0.5,size=15),
+   plot.title = element_text(color="steelblue", size=17, face="bold.italic")
+   )
+   })
+  
+ 
 }
 
 shinyApp(ui=ui,server=server)
