@@ -1,0 +1,89 @@
+---
+title: "RaukR_twitter"
+author: "Paloma"
+date: "19/6/2019"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    css: ["./raukr.css"]
+---
+```{r echo = FALSE, message=FALSE}
+library(rtweet)
+library(tidyverse)
+library(here)
+library(glue)
+library(rio)
+data_week_bioinf <- import(here("03_rawdata", "data_week_bioinf.RData"))
+timeline <- import(here("03_rawdata", "timeline_top20_bioinf.RData"))
+```
+
+For this project we did the following steps:
+
+- Created a git repo: [RaukR_twitter](https://github.com/jonellevillar/RaukR_twitter)
+
+- Imported data from twitter API using different criteria
+
+- We builted functions for cleaning and graphing data
+
+- Created a shinny app
+
+# Data extraction
+
+## Libraries we used
+```{r eval = FALSE, echo = TRUE}
+library(rtweet)
+library(tidyverse)
+library(here)
+library(glue)
+library(rio)
+```
+
+## Criteria for filtering data
+We used the `search_tweet` function from the `rtweet` package to bring all the tweets that used the `#bioinformatics`.
+
+```{r, eval = FALSE}
+data_week_bioinf <- search_tweets(
+  "bioinformatics", n = 18000, include_rts = TRUE)
+```
+
+```{r}
+data_week_bioinf %>% 
+  select(1:10) %>% 
+  glimpse
+```
+
+Since this function only brings data from the last 7 days, we asked for a twitter API token, in order to pull data from previous years.
+
+We selected the top 20 usernames and used the function `get_timelines`, were we included a vector with 20 top users of last week
+
+```{r, eval= FALSE}
+top_users <- function(data, number) {
+  top_users <- data %>%
+    count(screen_name) %>%
+    arrange(desc(n)) %>%
+    top_n(number) %>%
+    pull(screen_name)
+  return(top_users)
+}
+
+users_top <- top_users(data_week_bioinf, 20)
+
+timeline <- get_timelines(users_top, 
+                                n = 20000, 
+                                language = 'en',
+                                since = '2018-01-01', 
+                                until = '2019-06-15',
+                                token = token)
+```
+
+```{r}
+timeline %>% 
+  select(1:10) %>% 
+  glimpse()
+```
+
+
+
