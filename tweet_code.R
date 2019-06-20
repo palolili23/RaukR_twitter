@@ -22,6 +22,15 @@ x %>% .$is_retweet
 ## tweets sent via different platforms
 t <-table(x$source)
 
+## retweet counts
+retw_10 <- x %>% select(retweet_count) %>% 
+  filter(retweet_count < "10")
+count(retw_10) #n = 30514
+
+retw_gr10 <- x %>% select(retweet_count) %>% 
+  filter(retweet_count >= "10")
+count(retw_gr10) #n = 23346
+
 ## which country
 country_loc <- table(x$location) 
 
@@ -93,7 +102,15 @@ png("EU.png",height=5,width=7,units="cm",res=200)
 print(EU)
 dev.off()
 
+retw_10 <- x %>% select(retweet_count) %>% 
+  filter(retweet_count < "10")
+count(retw_10) #N = 30514
+
+retw_gr10 <- x %>% select(retweet_count) %>% 
+  filter(retweet_count >= "10")
+count(retw_gr10) #n = 23346
 
 
-  
  
+
+
