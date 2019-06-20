@@ -1,6 +1,6 @@
 ---
 title: "RaukR_twitter"
-author: "Jonelly, Paloma, Ying"
+author: "Jonelle, Paloma, Ying"
 date: "19/6/2019"
 output: 
   html_document:
